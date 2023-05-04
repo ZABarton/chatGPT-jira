@@ -15,11 +15,11 @@ export default async function (req, res) {
     return;
   }
 
-  const animal = req.body.animal || '';
-  if (animal.trim().length === 0) {
+  const description = req.body.description || '';
+  if (description.trim().length === 0) {
     res.status(400).json({
       error: {
-        message: "Please enter a valid animal",
+        message: "Please enter a description",
       }
     });
     return;
@@ -28,8 +28,9 @@ export default async function (req, res) {
   try {
     const completion = await openai.createCompletion({
       model: "text-davinci-003",
-      prompt: generatePrompt(animal),
+      prompt: generatePrompt(description),
       temperature: 0.6,
+      max_tokens: 2000,
     });
     res.status(200).json({ result: completion.data.choices[0].text });
   } catch(error) {
@@ -48,15 +49,25 @@ export default async function (req, res) {
   }
 }
 
-function generatePrompt(animal) {
-  const capitalizedAnimal =
-    animal[0].toUpperCase() + animal.slice(1).toLowerCase();
-  return `Suggest three names for an animal that is a superhero.
+function generatePrompt(description) {
+  return `Based on the following description
+    
+    ${description}
+  
+    Create the text of a Jira Ticket based on this description
+    The Jira Ticket should have a title that quickly summarizes the description
+    
+    The body of the Jira ticket should contain a section subtitled "Background"
+    This background suggestion should provide additional context for why we need the work described in the description.
 
-Animal: Cat
-Names: Captain Sharpclaw, Agent Fluffball, The Incredible Feline
-Animal: Dog
-Names: Ruff the Protector, Wonder Canine, Sir Barks-a-Lot
-Animal: ${capitalizedAnimal}
-Names:`;
+    After the "Background" section, the body of the Jira ticket should contain a section subtitled "Expected Work"
+    The "Expected Work" section should contain the list of steps to complete the described work.
+    This list of steps is considered "high-level" and should not focus too strongly on technical details.
+    The list should be bulleted and ordered in the sequence needed to complete the work.
+    
+    The final section of the ticket body should be titled "Acceptance Criteria"
+    This section should contain a bulleted list of requirements that need to be met in order to consider this ticket complete.
+   
+    Assume that any code that needs to be written will be written in the latest version of Ruby on Rails.
+`;
 }

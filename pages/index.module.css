@@ -63,5 +63,6 @@
 }
 .main .result {
   font-weight: bold;
-  margin-top: 40px;
+  margin: 40px;
+  white-space: break-spaces;
 }
